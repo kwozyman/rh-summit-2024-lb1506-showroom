@@ -4,6 +4,8 @@
 ** xref:module-01.adoc#high-level[High level setup]
 ** xref:module-01.adoc#status[Setup check]
 
-* xref:module-02.adoc[2. GitHub Sourced Container]
-** xref:module-02.adoc#prerequisites[Install Prerequisites]
-** xref:module-02.adoc#container[Enable Container]
+* xref:module-02.adoc[2. Building a simple container application]
+** xref:module-02.adoc#write[Write a Containerfile]
+** xref:module-02.adoc#build[Build the container]
+** xref:module-02.adoc#test[Test the container]
+
