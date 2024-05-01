@@ -100,5 +100,8 @@ podman image exists quay.io/kwozyman/toolbox:registry
 qemu-kvm-8.0.0-16.el9_3.3.x86_64
 jq-1.6-15.el9.x86_64
 guestfs-tools-1.50.1-3.el9.x86_64
+nano-5.6.1-5.el9.x86_64
 net.ipv4.ip_unprivileged_port_start = 80
+ID            NAME             CPU %       MEM USAGE / LIMIT  MEM %       NET IO            BLOCK IO    PIDS        CPU TIME    AVG CPU %
+fa77d569b19f  summit-registry  0.05%       17.9MB / 67.3GB    0.03%       3.88kB / 1.888kB  0B / 0B     20          18.923277s  0.05%
 ----
