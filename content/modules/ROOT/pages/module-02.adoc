@@ -4,7 +4,7 @@ In the first part of this workshop, you have done the initial setup. In this sec
 you will build and test a very simple containerized application.
 
 [#write]
-=== Write the Containerfile
+== Write the Containerfile
 
 You have to write and build a simple file called `Containerfile` using the provided `nano`
 editor with the following contents:
@@ -49,7 +49,7 @@ cat Containerfile
 NOTE: All the Containerfiles also exist in the `examples/` directory.
 
 [#build]
-=== Build the container
+== Build the container
 
 After defining the `Containerfile` you can build it by using the `podman build` command with
 the following arguments:
@@ -75,7 +75,7 @@ NOTE: the above build command will be used throughout this workshop so we've
 added a `make build` command that can be used instead.
 
 [#test]
-=== Test the containerized application
+== Test the containerized application
 
 Now that the application is ready, you can run it:
 
@@ -110,4 +110,16 @@ The result of the command above should be the "Hello RedHat" string from the Con
 Hello RedHat
 ----
 
-Congratulations, you are now running a containerized web server! Let's see how you can tranform this simple application into a virtual machine.
+You should preserve this image by tagging it:
+
+----
+podman tag summit.registry/bifrost:latest summit.registry/bifrost:app
+----
+
+And you should also remove the running container:
+
+----
+podman stop http-test
+----
+
+Congratulations, you now know how to run a containerized web server! Let's see how you can tranform this simple application into a bootc container.

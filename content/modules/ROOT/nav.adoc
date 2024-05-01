@@ -9,3 +9,8 @@
 ** xref:module-02.adoc#build[Build the container]
 ** xref:module-02.adoc#test[Test the container]
 
+* xref:module-03.adoc[3. Building the first bootc container]
+** xref:module-03.adoc#write[(re)Write the Containerfile]
+** xref:module-03.adoc#build[Build the container]
+** xref:module-03.adoc#test[Test the container]
+
