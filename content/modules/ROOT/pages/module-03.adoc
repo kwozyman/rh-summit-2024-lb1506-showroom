@@ -1,0 +1,112 @@
+= Build a bootc container image
+
+In this lab, you will transform the previous simple containerized application into a
+bootc container.
+
+[#write]
+== (re)Write the Containerfile
+
+In the last lab, you have created a Containerfile with the following contents:
+
+[source,dockerfile]
+----
+FROM registry.access.redhat.com/ubi9/ubi
+
+RUN dnf install -y httpd
+RUN echo Hello RedHat > /var/www/html/index.html
+
+ENTRYPOINT /usr/sbin/httpd -DFOREGROUND
+----
+
+You can now use your preferred text editor (`nano Containerfile`) to modify the contents as follows:
+
+[source,dockerfile]
+----
+FROM registry.redhat.io/rhel9/rhel-bootc:9.4
+
+RUN dnf install -y httpd
+RUN echo Hello RedHat > /var/www/html/index.html
+
+RUN systemctl enable httpd.service
+ENTRYPOINT /usr/sbin/httpd -DFOREGROUND
+----
+
+You can immediately observe two changes:
+
+  * the `FROM` field is now pointing to the Red Hat 9.4 base bootc image `registry.redhat.io/rhel9/rhel-bootc:9.4`
+  * `RUN systemctl enable httpd.service` is added in order to start the `httpd` service at host startup
+
+You can also take note that installation of software is still done via `dnf` and of course `systemctl` works
+exactly like it would in a regular Linux system.
+
+NOTE: For CentOS Stream 9 users, use `FROM quay.io/centos-bootc/centos-bootc:stream9`
+
+[#build]
+== Build the first bootc image
+
+Like with the previous simple application, you can build this container:
+
+[source,dockerfile]
+----
+podman build --file Containerfile --tag summit.registry/bifrost:latest
+----
+
+If the above command is succesful, the last two lines of the output should read like this:
+
+----
+Successfully tagged summit.registry/bifrost:latest
+f1bea10eb37acf2e78a9b01c6242110c1901adbaf40dbce479241c6c735c58da
+----
+
+NOTE: the above build command will be used throughout this workshop so we've
+added a `make build` command that can be used instead.
+
+[#test]
+== Test the containerized application
+
+Now that the bootc container is ready, you can test it exactly like the previous one:
+
+[source,bash]
+----
+podman run --rm --name http-test --detach --publish 80:80 summit.registry/bifrost:latest
+----
+
+Test that it is running:
+
+[source,bash]
+----
+podman ps | grep http-test
+----
+
+The output of the command above should read like this:
+
+----
+06a7bdb1950b  summit.registry/bifrost:latest    15 seconds ago  Up 16 seconds  0.0.0.0:80->80/tcp    http-test
+----
+
+And you can test the application:
+
+[source,bash]
+----
+curl http://localhost/
+----
+
+The result of the command above should be the "Hello RedHat" string from the Containerfile:
+
+----
+Hello RedHat
+----
+
+You should preserve this image by tagging it:
+
+----
+podman tag summit.registry/bifrost:latest summit.registry/bifrost:bootc
+----
+
+And stop the running container:
+
+----
+podman stop http-test
+----
+
+The resulting container looks and behaves exactly like the previous one, how can it be installed on a virtual machine?
