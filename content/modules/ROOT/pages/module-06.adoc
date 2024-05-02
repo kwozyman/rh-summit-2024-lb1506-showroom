@@ -1,0 +1,201 @@
+= Deploying a bootc container from inside a running system
+
+Bootc containers are self deploying and a novel method of installation involves transforming a regular
+Linux host into a bootc backed host.
+
+
+[#create-bootc]
+== Add authentication method to Containerfile
+
+When using this method of deployment, passwords and/or ssh keys need to be added directly to the container image. You
+need to edit the `Containerfile` to the following:
+
+[source,dockerfile]
+----
+FROM registry.redhat.io/rhel9/rhel-bootc:9.4
+
+RUN dnf install -y httpd
+RUN echo Hello RedHat > /var/www/html/index.html
+
+ADD certs/004-summit.conf /etc/containers/registries.conf.d/004-summit.conf
+
+ARG SSHPUBKEY
+ADD templates/30-auth-system.conf /etc/ssh/sshd_config.d/30-auth-system.conf
+RUN mkdir -p /usr/ssh
+RUN echo ${SSHPUBKEY} > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys
+----
+
+Please notice the top part is still the httpd server we started this workshop with, but there are now 
+a couple of new lines:
+
+  * `ADD certs/004-summit.conf /etc/containers/registries.conf.d/004-summit.conf` -> will allow us to pull container images without TLS verification and is only necessary in this dev environment with self signed certificates for the registry.
+  * `ARG SSHPUBKEY` -> adds a new build-time argument for `podman` to be used as the public ssh key
+  * `ADD templates/30-auth-system.conf /etc/ssh/sshd_config.d/30-auth-system.conf` -> add configuration for ssh to take authorization keys from the usual HOMEDIR path *and* from `/usr/ssh/root.keys`
+
++
+The contents of this file is
+
++
+----
+AuthorizedKeysFile /usr/ssh/%u.keys .ssh/authorized_keys .ssh/authorized_keys2
+----
+
+  * `RUN mkdir -p /usr/ssh` -> create the new keys directory
+  * `RUN echo ${SSHPUBKEY} > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys` -> write the build time argument as the ssh key for the `root` user
+
+You can now build the new container image with with the following command:
+
+[source,bash]
+----
+podman build --build-arg SSHPUBKEY="$(cat  ~/.ssh/id_rsa.pub)" --file Containerfile --tag summit.registry/bifrost:bootc-auth
+----
+
+Please take note of the `--build-arg SSHPUBKEY="$(cat  ~/.ssh/id_rsa.pub)"` argument, which replaces `${SSHPUBKEY}` in the Containerfile with 
+the pregenerated ssh key stored in the file `~/.ssh/id_rsa.pub`.
+
+If the build command was successful, make sure to push the new container image to our local registry:
+
+[source,bash]
+----
+podman push summit.registry/bifrost:bootc-auth
+----
+
+[#create-vm]
+== Creating the classic Linux host
+
+In this part you need to create a "regular" Linux virtual machine. The exact steps for creating a
+virtual machine are out of scope for this workshop, but you have a ready made script to do just that:
+
+[source,bash]
+----
+make vm-regular
+----
+
+The command above will download and start a CentOS Stream 9 virtual machine and inject it with the already generated
+ssh key.
+
+You can now check the virtual machine has been created:
+
+[source,bash]
+----
+virsh --connect qemu:///system list
+----
+
+The output should containe a virtual machine called `regular`.
+
+Before moving forward, you can quickly check that the new virtual machine is not running the http application:
+
+----
+curl http://regular-vm
+----
+
+The above command should fail.
+
+[#bootc-deploy]
+== Selfdeploying the bootc container
+
+Having created the `regular` virtual machine, you can now ssh into it:
+
+[source,bash]
+----
+ssh root@regular-vm
+----
+
+You can list `/etc/os-release` to see it's a plain Linux system.
+
+Inside the virtual machine, you can use `podman` to pull the bootc container:
+
+[source,bash]
+----
+podman pull summit.registry/bifrost:bootc-auth
+----
+
+And you can now use the same container image to self deploy!
+
+[source,bash]
+----
+podman run --rm --privileged \
+        --pid=host --security-opt label=type:unconfined_t \
+        --volume /dev:/dev \
+        --volume /var/lib/containers:/var/lib/containers \
+        --volume /:/target \
+        --entrypoint bootc \
+        summit.registry/bifrost:bootc-auth \
+        install to-filesystem --skip-fetch-check --replace=alongside /target
+----
+
+The output of the previous command should like like this:
+
+----
+Installing image: docker://summit.registry/bifrost:bootc-auth
+Digest: sha256:783522458bb01c7c9870f03b21cbad7497edbb5e95fc59d7a2c3ada7141929fa
+Initializing ostree layout
+Initializing sysroot
+ostree/deploy/default initialized as OSTree stateroot
+Deploying container image
+Deployment complete
+Running bootupctl to install bootloader
+Installed: grub.cfg
+Installation complete!
+----
+
+If the deployment was successful, you can now reboot the virtual machine and login to the new system!
+
+[source,bash]
+----
+systemctl reboot
+----
+
+Before logging in to the new virtual machine, you can check if the http application is still working:
+
+----
+curl http://regular-vm
+----
+
+After a brief moment, you should be able to log back into the (now) bootc system:
+
+[source,bash]
+----
+ssh-keygen -R regular-vm
+ssh root@regular-vm
+----
+
+Like for the first virtual machine, you can now check the bootc status:
+
+[source,bash]
+----
+bootc status
+----
+
+The output should look like this:
+
+----
+apiVersion: org.containers.bootc/v1alpha1
+kind: BootcHost
+metadata:
+  name: host
+spec:
+  image:
+    image: summit.registry/bifrost:latest
+    transport: registry
+  bootOrder: default
+status:
+  staged: null
+  booted:
+    image:
+      image:
+        image: summit.registry/bifrost:latest
+        transport: registry
+      version: stream9.20240429.0
+      timestamp: null
+      imageDigest: sha256:783522458bb01c7c9870f03b21cbad7497edbb5e95fc59d7a2c3ada7141929fa
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 8bcd62809be865190313319da9e01a67ed22e2a276fe1e69f20c0a5b643a947c
+      deploySerial: 0
+  rollback: null
+  rollbackQueued: false
+  type: bootcHost
+----

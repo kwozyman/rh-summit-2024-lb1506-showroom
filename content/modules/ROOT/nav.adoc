@@ -25,3 +25,8 @@
 ** xref:module-05.adoc#run[Starting the installation]
 ** xref:module-05.adoc#test[Testing]
 
+* xref:module-06.adoc[6. Deploying a bootc virtual machine from an already deployed system]
+** xref:module-06.adoc#create-bootc[Add auth to Containerfile]
+** xref:module-06.adoc#create-vm[Creating the new virtual machine]
+** xref:module-06.adoc#bootc-deploy[Selfdeploying the bootc container]
+
