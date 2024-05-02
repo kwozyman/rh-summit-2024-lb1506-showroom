@@ -1,0 +1,151 @@
+= Deploy a bootc virtual machine with prebuilt image
+
+In this lab, you will build a `qcow2` libvirt image out of the bootc container and then boot
+a virtual machine using it.
+
+`qcow2` is a standard file format used by the Linux virtualization system.
+
+[#config]
+== Create the config for building the virtual machine image
+
+You may have noticed the bootc container image we've created does not include any login credentials.
+In order to be able to login to the future virtual machine, you need to create a JSON file with that configuration.
+You can create a file called `config-qcow2.json` with the following contents, replacing `SSHKEY` with the desired ssh public key:
+
+[source,json]
+----
+{
+  "blueprint": {
+    "customizations": {
+      "user": [
+        {
+          "name": "cloud-user",
+          "password": "bifrost",
+          "key": "SSHKEY",
+          "groups": [
+            "wheel"
+          ]
+        }
+      ]
+    }
+  }
+}
+----
+
+For your convenience, a config file has already been generated with the ssh key for your lab host in `config/config-qcow2.json` so
+you can just use that with `cp config/config-qcow2.json config-qcow2.json`.
+
+[#create]
+== Create the virtual machine image
+
+In this section, we will assume you are using the bootc image generated in the previous part of the lab tagged `summit.registry/bifrost:bootc`.
+
+First, you want to make sure the bootc image is pushed to the local registry:
+
+[source,bash]
+----
+podman push summit.registry/bifrost:bootc
+----
+
+In order to build the qcow image, you will use a containerized tool called `bootc-image-builder`. For image builder to work,
+it needs `root` permissions. Try to generate the image now:
+
+[source,bash]
+----
+sudo podman run --rm --privileged \
+        --volume .:/output \
+        --volume ./config-qcow2.json:/config.json \
+        registry.redhat.io/rhel9/bootc-image-builder:latest \
+        --type qcow2 --config /config.json \
+        --tls-verify=false \
+        summit.registry/bifrost:bootc
+----
+
+A brief explanation of the arguments used:
+
+  * `--rm` -> do not keep the build container after execution finishes
+  * `--privileged` -> root permissions are required to build the image
+  * `--volume` -> podman will map these local directories or files to the container
+  * `registry.redhat.io/rhel9/bootc-image-builder:latest` -> the image builder container image
+  * `--type qcow2` -> the type of image to build
+  * `--config /config.json` -> the json configuration file used; please note this is relative to the container filesystem
+  * `--tls-verify=false` -> the registry we are running is local and it has self signed certificates; this flag would not be needed with `quay.io` for example
+  * `summit.registry/bifrost:bootc` -> the image we are trying to pack into qcow2
+
+If the previous command was successful, you should be able to see the image is the `qcow2/` directory:
+
+[source,bash]
+----
+ls -lah qcow2/disk.qcow2
+----
+
+The output should be similar to:
+
+[source]
+----
+-rw-r--r--. 1 root root 945M May  2 06:10 qcow2/disk.qcow2
+----
+
+NOTE: for your convenience, this part of the exercise is automated by using the `make qcow CONTAINER=summit.registry/bifrost:bootc` command
+
+NOTE: if you are using CentOS Stream 9, the `registry.redhat.io/rhel9/bootc-image-builder:latest` can be replaced with `quay.io/centos-bootc/bootc-image-builder:latest`
+
+[#create-vm]
+== Create the virtual machine
+
+Creating and running a virtual machine is out of scope for this lab, so this step has been automated
+in the Makefile:
+
+[source,bash]
+----
+make vm-qcow
+----
+
+For reference, the manual command is (you do not need to run this command):
+
+[source,bash]
+----
+sudo cp qcow2/disk.qcow2 /var/lib/libvirt/images/summit/qcow-vm.qcow2
+virt-install --connect qemu:///system \
+        --name qcow-vm \
+        --disk /var/lib/libvirt/images/summit/qcow-vm.qcow2 \
+        --network "network=summit-network,mac=de:ad:be:ef:01:03" \
+        --memory 4096 --graphics none --noreboot
+virsh --connect qemu:///system start qcow-vm
+----
+
+If `make vm-qcow` was successful, you should see the virtual machine running:
+
+[source,bash]
+----
+virsh --connect qemu:///system list
+
+ Id   Name                State
+------------------------------------
+ 5    qcow-vm             running
+----
+
+[#test]
+== Test and login to the virtual machine
+
+Now that the virtual machine is up and running, you can see if the application behaves the same:
+
+----
+curl http://qcow-vm
+----
+
+And the results should be the "Hello RedHat" string defined in the Containerfile.
+
+You can also login to the virtual machine:
+
+----
+ssh cloud-user@qcow-vm
+----
+
+If the ssh key is not automatically picked up, use the password defined in the JSON file at the beginning of this lab (by default `bifrost`).
+
+Once you have logged in, you can inspect the bootc status:
+
+----
+sudo bootc status
+----

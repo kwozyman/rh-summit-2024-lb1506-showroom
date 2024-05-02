@@ -14,3 +14,9 @@
 ** xref:module-03.adoc#build[Build the container]
 ** xref:module-03.adoc#test[Test the container]
 
+* xref:module-04.adoc[4. Deploying a bootc virtual machine with prebuilt image]
+** xref:module-04.adoc#config[Create the config]
+** xref:module-04.adoc#create[Create the image]
+** xref:module-04.adoc#create-vm[Create the virtual machine]
+** xref:module-04.adoc#test[Testing]
+
