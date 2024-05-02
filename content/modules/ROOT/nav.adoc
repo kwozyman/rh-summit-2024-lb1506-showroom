@@ -20,3 +20,8 @@
 ** xref:module-04.adoc#create-vm[Create the virtual machine]
 ** xref:module-04.adoc#test[Testing]
 
+* xref:module-05.adoc[5. Deploying a bootc virtual machine with Anaconda]
+** xref:module-05.adoc#build[Building the installation iso]
+** xref:module-05.adoc#run[Starting the installation]
+** xref:module-05.adoc#test[Testing]
+
