@@ -9,8 +9,22 @@ a virtual machine using it.
 == Create the config for building the virtual machine image
 
 You may have noticed the bootc container image we've created does not include any login credentials.
-In order to be able to login to the future virtual machine, you need to create a JSON file with that configuration.
-You can create a file called `config-qcow2.json` with the following contents, replacing `SSHKEY` with the desired ssh public key:
+In order to be able to login to the future virtual machine, you need to create a JSON file with the credentials.
+
+A ssh key has been generated in the Setup section of this lab. You can view the public part like this:
+
+[source,bash]
+----
+cat ~/.ssh/id_rsa.pub
+----
+
+The output should look something like this (Example):
+
+----
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAuXnpoluye+KM+9tvIAdHf+F0IHh+K73tlcjEG8LJRB lab-user@hypervisor
+----
+
+You can now create a file called `config-qcow2.json` with the following contents, replacing the `key` field with the ssh key from your system:
 
 [source,json]
 ----
@@ -19,9 +33,9 @@ You can create a file called `config-qcow2.json` with the following contents, re
     "customizations": {
       "user": [
         {
-          "name": "cloud-user",
+          "name": "lab-user",
           "password": "bifrost",
-          "key": "SSHKEY",
+          "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAuXnpoluye+KM+9tvIAdHf+F0IHh+K73tlcjEG8LJRB lab-user@hypervisor",
           "groups": [
             "wheel"
           ]
@@ -32,7 +46,9 @@ You can create a file called `config-qcow2.json` with the following contents, re
 }
 ----
 
-For your convenience, a config file has already been generated with the ssh key for your lab host in `config/config-qcow2.json` so
+The above file creates a user `lab-user` with the password `bifrost` and the ssh key in the generated virtual machine image.
+
+NOTE: For your convenience, a config file has already been generated with the ssh key for your lab host in `config/config-qcow2.json` so
 you can just use that with `cp config/config-qcow2.json config-qcow2.json`.
 
 [#create]
@@ -139,13 +155,63 @@ And the results should be the "Hello RedHat" string defined in the Containerfile
 You can also login to the virtual machine:
 
 ----
-ssh cloud-user@qcow-vm
+ssh lab-user@qcow-vm
 ----
 
 If the ssh key is not automatically picked up, use the password defined in the JSON file at the beginning of this lab (by default `bifrost`).
 
-Once you have logged in, you can inspect the bootc status:
+Once you have logged in, you can inspect the bootc status (the password for `sudo` is `bifrost`):
 
 ----
 sudo bootc status
 ----
+
+The output should look similar to this:
+
+[source,yaml]
+----
+apiVersion: org.containers.bootc/v1alpha1
+kind: BootcHost
+metadata:
+  name: host
+spec:
+  image:
+    image: summit.registry/bifrost:bootc
+    transport: registry
+  bootOrder: default
+status:
+  staged: null
+  booted:
+    image:
+      image:
+        image: summit.registry/bifrost:bootc
+        transport: registry
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:0a3daed6e31c2f2917e17ea994059e1aaee0481fe16836c118c5e1d10a87365c
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 008e3bef805f25224f591240627bea2a06ce12b25494836c2dab7d1b0a1691a8
+      deploySerial: 0
+  rollback: null
+  rollbackQueued: false
+  type: bootcHost
+----
+
+Congratulations, you are running a bootc virtual machine! From the output of `bootc status` you can clearly see the virtual machine is running the `summit.registry/bifrost:bootc` container image.
+
+You can explore the virtual machine before moving on to the next section:
+
+  * `systemctl status httpd` -> see the `httpd` service we have enabled in the Containerfile
+  * `cat /var/www/html/index.html` -> see the index.html file we have created in the Containerfile
+
+Before proceeding, make sure you have logged out of the virtual machine:
+
+[source,bash]
+----
+logout
+----
+
+The prompt should read `[lab-user@hypervisor rh-summit-2024-lb1506]$` before continuing.

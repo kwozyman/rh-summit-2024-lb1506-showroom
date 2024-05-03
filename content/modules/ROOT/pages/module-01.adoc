@@ -10,29 +10,18 @@ First, let's start by cloning the helper scripts.
 
 [source,bash]
 ----
-git clone https://github.com/kwozyman/edge-os.git
+git clone https://github.com/kwozyman/rh-summit-2024-lb1506
 ----
 
 ...and changing our directory to the newly created one:
 
 [source,bash]
 ----
-cd edge-os
-----
-
-[#low-level]
-== Preparing the host with some packages and other tidbits
-
-Now that the scripts are ready, you can continue with system setup. This command will install a
-couple of extra packages on the host needed for this lab and start some system services.
-
-[source,bash]
-----
-make system-setup
+cd rh-summit-2024-lb1506
 ----
 
 [#login]
-=== Red Hat registry login
+== Red Hat registry login
 
 In order to use the base Red Hat container images, you need to login to Red Hat's image container registry
 by using your Red Hat account credentials.
@@ -51,14 +40,14 @@ have to replace any occurences of `registry.redhat.io/rhel9/rhel-bootc:9.4` with
 wherever they appear in this document
 
 [#high-level]
-=== Preparing the host for container building
+== Preparing the host for container building
 
 In this final part of the setup, you will:
 
-  * download all container images used
   * setup the hypervisor for running virtual machines
   * generate a local ssh key
   * run a local container image registry
+  * download all the required container images
 
 Don't worry if this sounds like a lot, there is a script to do it all for you:
 
@@ -68,7 +57,7 @@ make setup
 ----
 
 [#status]
-=== Checking the setup
+== Checking the setup
 
 One final check before you advance to the next lab.
 
@@ -97,10 +86,6 @@ podman image exists quay.io/kwozyman/toolbox:registry
  Id   Name   State
 --------------------
 
-qemu-kvm-8.0.0-16.el9_3.3.x86_64
-jq-1.6-15.el9.x86_64
-guestfs-tools-1.50.1-3.el9.x86_64
-nano-5.6.1-5.el9.x86_64
 net.ipv4.ip_unprivileged_port_start = 80
 ID            NAME             CPU %       MEM USAGE / LIMIT  MEM %       NET IO            BLOCK IO    PIDS        CPU TIME    AVG CPU %
 fa77d569b19f  summit-registry  0.05%       17.9MB / 67.3GB    0.03%       3.88kB / 1.888kB  0B / 0B     20          18.923277s  0.05%

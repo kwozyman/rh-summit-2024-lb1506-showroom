@@ -16,6 +16,7 @@ FROM registry.redhat.io/rhel9/rhel-bootc:9.4
 
 RUN dnf install -y httpd
 RUN echo Hello RedHat > /var/www/html/index.html
+RUN systemctl enable httpd
 
 ADD certs/004-summit.conf /etc/containers/registries.conf.d/004-summit.conf
 
@@ -81,9 +82,9 @@ You can now check the virtual machine has been created:
 virsh --connect qemu:///system list
 ----
 
-The output should containe a virtual machine called `regular`.
+The output should contain a virtual machine called `regular`.
 
-Before moving forward, you can quickly check that the new virtual machine is not running the http application:
+Before moving forward, you can quickly check that the new virtual machine is *not* running the http application:
 
 ----
 curl http://regular-vm
@@ -101,16 +102,19 @@ Having created the `regular` virtual machine, you can now ssh into it:
 ssh root@regular-vm
 ----
 
-You can list `/etc/os-release` to see it's a plain Linux system.
+Before moving forward, you can explore this regular virtual machine:
 
-Inside the virtual machine, you can use `podman` to pull the bootc container:
+  * `bootc status` -> should fail as there is no `bootc` commmand
+  * `cat /etc/os-release` -> should show you a standard CentOS Stream 9 host
+
+Now, inside the virtual machine, you can use `podman` to pull the bootc container:
 
 [source,bash]
 ----
 podman pull summit.registry/bifrost:bootc-auth
 ----
 
-And you can now use the same container image to self deploy!
+And you can now use the container image to self deploy!
 
 [source,bash]
 ----
@@ -139,14 +143,16 @@ Installed: grub.cfg
 Installation complete!
 ----
 
-If the deployment was successful, you can now reboot the virtual machine and login to the new system!
+If the deployment was successful, you can now reboot the virtual machine and login to the new system! Before doing so,
+please make sure you are logged in to the virtual machine and not the hypervisor (the prompt should look like `[root@regular-vm ~]#`):
+
 
 [source,bash]
 ----
 systemctl reboot
 ----
 
-Before logging in to the new virtual machine, you can check if the http application is still working:
+Before logging in to the new virtual machine, you can check if the http application is already working:
 
 ----
 curl http://regular-vm
@@ -169,6 +175,7 @@ bootc status
 
 The output should look like this:
 
+[source,yaml]
 ----
 apiVersion: org.containers.bootc/v1alpha1
 kind: BootcHost
@@ -176,7 +183,7 @@ metadata:
   name: host
 spec:
   image:
-    image: summit.registry/bifrost:latest
+    image: summit.registry/bifrost:bootc-auth
     transport: registry
   bootOrder: default
 status:
@@ -184,18 +191,29 @@ status:
   booted:
     image:
       image:
-        image: summit.registry/bifrost:latest
+        image: summit.registry/bifrost:bootc-auth
         transport: registry
-      version: stream9.20240429.0
+      version: 9.20240501.0
       timestamp: null
-      imageDigest: sha256:783522458bb01c7c9870f03b21cbad7497edbb5e95fc59d7a2c3ada7141929fa
+      imageDigest: sha256:b57df8b24f7ddaf39ade0efe02d203e4fcd63deca2a9fd47f4af5c2cc3fcd017
     cachedUpdate: null
     incompatible: false
     pinned: false
     ostree:
-      checksum: 8bcd62809be865190313319da9e01a67ed22e2a276fe1e69f20c0a5b643a947c
+      checksum: 22b18bfa0e94fbe390379cb4bae150ebad85c8844e7b721179d26c1df636ce8e
       deploySerial: 0
   rollback: null
   rollbackQueued: false
   type: bootcHost
 ----
+
+Congratulations, you have successfully deployed and booted a bootc container on a running host!
+
+Before proceeding, make sure you have logged out of the virtual machine:
+
+[source,bash]
+----
+logout
+----
+
+The prompt should read `[lab-user@hypervisor rh-summit-2024-lb1506]$` before continuing.

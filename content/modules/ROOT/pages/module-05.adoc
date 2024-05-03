@@ -3,8 +3,8 @@
 In this lab you will learn the basics of deploying a bootc image using Anaconda and an
 all in one `iso` image.
 
-Anaconda is the official Red Hat Enterprise Linux and it uses Kickstart as it's scripting language. Kickstart
-received a new command called `ostreecontainer`.
+Anaconda is the official Red Hat Enterprise Linux installer and it uses Kickstart as it's scripting language.
+Recently, Kickstart received a new command called `ostreecontainer`.
 
 [#build]
 == Building an installation iso with the bootc container
@@ -43,7 +43,7 @@ sudo ls -lah /var/lib/libvirt/images/summit/rhel-boot-custom.iso
 ----
 
 For reference, the script used to embed and build the custom iso can be found in `bin/embed-container` and it can
-be resumed with the following steps (no need to run these commands):
+be resumed with the following steps (*no need to run these commands*):
 
   1. use `skopeo` to copy the container image to a temporary directoy on disk:
 
@@ -81,10 +81,10 @@ poweroff
 
 Please note there are no rpm packages mentioned anywhere, just a `ostreecontainer` command:
 
-  * `--url=/run/install/repo/container` -> path to the local container in the iso but it can also directly take a publicly availalbe registry
+  * `--url=/run/install/repo/container` -> path to the local container in the iso but it can also directly take a publicly available registry
   * `--transport=oci` -> the format in which the container is available, in this case `oci`
 
-If you wanted to deploy directly from a container registry, the `ostreecontainer` command would look like this (no need to run this command):
+If you wanted to deploy directly from a container registry, the `ostreecontainer` command would look like this (*no need to run this command*):
 
 ----
 ostreecontainer --url=quay.io/myorg/myimage:mytag
@@ -106,42 +106,252 @@ but it is the process most generally used for bare metal hosts. It shows how a c
 couple of simple commands and scripts. It's also important to note, everything needed is inside the custom iso created and at no
 point is network access required.
 
-For reference, if you want to manually create the virtual machine, the command looks like this (no need to run this command):
+You can now see if the virtual machine is running:
 
+[source,bash]
 ----
-virt-install --connect qemu:///system \
-        --name vm-iso \
-        --disk "pool=summit-storage,size=50" \
-        --network "network=summit-network,mac=de:ad:be:ef:01:01" \
-        --location /var/lib/libvirt/images/summit/rhel-boot-custom.iso,kernel=images/pxeboot/vmlinuz,initrd=images/pxeboot/initrd.img \
-        --extra-args="inst.ks=hd:LABEL=CentOS-Stream-9-BaseOS-x86_64:/local.ks console=tty0 console=ttyS0,115200n8" \
-        --memory 4096 \
-        --graphics none \
-        --noreboot
-virsh --connect qemu:///system start vm-iso
+virsh --connect qemu:///system list
+
+ Id   Name   State
+----------------------
+ 1    qcow   running
+ 4    iso    running
 ----
 
 [#test]
 == Test and login to the virtual machine
 
+Like with the previous virtual machine created, you can directly see if the http application is already running on the host:
+
+[source,bash]
 ----
 curl http://iso-vm
 ----
 
-----
-virsh --connect qemu:///system list
-----
+The output should be the already known "Hello RedHat"
+
+You should also be able to login to the virtual machine:
 
 ----
 ssh lab-user@iso-vm
 ----
 
+If the ssh key is not automatically picked up, use the password `bifrost`.
+
+You can now check the status of `bootc`:
+
 ----
 bootc status
 ----
 
+The output should be similar to this:
+
+[source,yaml]
 ----
-podman pull --tls-verify=false summit.registry/bifrost:bootc
-bootc --transport containers-storage summit.registry/bifrost:bootc
-systemctl reboot
+apiVersion: org.containers.bootc/v1alpha1
+kind: BootcHost
+metadata:
+  name: host
+spec:
+  image:
+    image: /run/install/repo/container
+    transport: oci
+  bootOrder: default
+status:
+  staged: null
+  booted:
+    image:
+      image:
+        image: /run/install/repo/container
+        transport: oci
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:0a3daed6e31c2f2917e17ea994059e1aaee0481fe16836c118c5e1d10a87365c
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 42f36e87a9436d505b3993822b92dbf7961ad3f1a8fddf67b91746df365784f0
+      deploySerial: 0
+  rollback: null
+  rollbackQueued: false
+  type: bootcHost
 ----
+
+[#switch]
+== Switching to the actual container image
+
+One thing that immediately is obvious in the `bootc status` output is that the deployed image image is a local path:
+
+[source,yaml]
+----
+spec:
+  image:
+    image: /run/install/repo/container
+    transport: oci
+  bootOrder: default
+----
+
+Because in the deployment step the container image was included in the installation iso, the reference to the registry container image
+is lost. This can be easily fixed by first pulling the image:
+
+[source,bash]
+----
+sudo podman pull --tls-verify=false summit.registry/bifrost:bootc
+----
+
+And then switching our installation to use the new container image:
+
+----
+sudo bootc --transport containers-storage summit.registry/bifrost:bootc
+----
+
+The output should look like this:
+
+----
+Loading usr/lib/ostree/prepare-root.conf
+Queued for next boot: ostree-unverified-image:containers-storage:summit.registry/bifrost:bootc
+  Version: 9.20240501.0
+  Digest: sha256:0a3daed6e31c2f2917e17ea994059e1aaee0481fe16836c118c5e1d10a87365c
+----
+
+At this point, the "new" installation has been prepared and will be started at next boot of the virtual machine.
+One last look at the status:
+
+[source,bash]
+----
+sudo bootc status
+----
+
+Should give the following output:
+
+[source,yaml]
+----
+apiVersion: org.containers.bootc/v1alpha1
+kind: BootcHost
+metadata:
+  name: host
+spec:
+  image:
+    image: summit.registry/bifrost:bootc
+    transport: containers-storage
+  bootOrder: default
+status:
+  staged:
+    image:
+      image:
+        image: summit.registry/bifrost:bootc
+        transport: containers-storage
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:0a3daed6e31c2f2917e17ea994059e1aaee0481fe16836c118c5e1d10a87365c
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 6e468a048b5c86ed8c481040b125b442b9222c914fc12799123717eb94fc43b6
+      deploySerial: 0
+  booted:
+    image:
+      image:
+        image: /run/install/repo/container
+        transport: oci
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:0a3daed6e31c2f2917e17ea994059e1aaee0481fe16836c118c5e1d10a87365c
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 42f36e87a9436d505b3993822b92dbf7961ad3f1a8fddf67b91746df365784f0
+      deploySerial: 0
+  rollback: null
+  rollbackQueued: false
+  type: bootcHost
+----
+
+Please take note of the `staged` section, which shows what is prepared for the next boot and the `booted` section which shows the currently
+booted status. For this exercise, these two differ only in name and source but it does show a regular workflow in using os containers.
+
+The last step for the change to take is to reboot the virtual machine. Before doing it, please make sure you are logged in to the
+virtual machine and not the hypervisor (the prompt should look like `[lab-user@bifrost-vm ~]$`):
+
+[source,bash]
+----
+sudo systemctl reboot
+----
+
+In a short time after that command, you should be able to ssh back to the virtual machine:
+
+[source,bash]
+----
+ssh lab-user@iso-vm
+----
+
+And check the bootc status:
+
+[source,bash]
+----
+sudo bootc status
+----
+
+[source,yaml]
+----
+apiVersion: org.containers.bootc/v1alpha1
+kind: BootcHost
+metadata:
+  name: host
+spec:
+  image:
+    image: summit.registry/bifrost:bootc
+    transport: containers-storage
+  bootOrder: default
+status:
+  staged: null
+  booted:
+    image:
+      image:
+        image: summit.registry/bifrost:bootc
+        transport: containers-storage
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:0a3daed6e31c2f2917e17ea994059e1aaee0481fe16836c118c5e1d10a87365c
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 6e468a048b5c86ed8c481040b125b442b9222c914fc12799123717eb94fc43b6
+      deploySerial: 0
+  rollback:
+    image:
+      image:
+        image: /run/install/repo/container
+        transport: oci
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:0a3daed6e31c2f2917e17ea994059e1aaee0481fe16836c118c5e1d10a87365c
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 42f36e87a9436d505b3993822b92dbf7961ad3f1a8fddf67b91746df365784f0
+      deploySerial: 0
+  rollbackQueued: false
+  type: bootcHost
+----
+
+You can now see the `booted` section mentiones out container image and there is a new `rollback` section. We will address this section in a future lab.
+
+You can explore the virtual machine before moving on to the next section:
+
+  * `systemctl status httpd` -> see the `httpd` service we have enabled in the Containerfile
+  * `cat /var/www/html/index.html` -> see the index.html file we have created in the Containerfile
+
+Before proceeding, make sure you have logged out of the virtual machine:
+
+[source,bash]
+----
+logout
+----
+
+The prompt should read `[lab-user@hypervisor rh-summit-2024-lb1506]$` before continuing.

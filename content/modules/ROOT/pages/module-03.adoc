@@ -103,7 +103,13 @@ You should preserve this image by tagging it:
 podman tag summit.registry/bifrost:latest summit.registry/bifrost:bootc
 ----
 
-And stop the running container:
+And pushing it to the local registry:
+
+----
+podman push summit.registry/bifrost:bootc
+----
+
+You should also stop the running container:
 
 ----
 podman stop http-test
