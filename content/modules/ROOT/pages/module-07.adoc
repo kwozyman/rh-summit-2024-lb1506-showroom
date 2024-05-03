@@ -1,0 +1,62 @@
+= Updating bootc systems
+
+In this lab, you will learn how to update bootc hosts.
+
+[#update-container]
+== Updating the container image
+
+The first virtual machine you have created during this workshop should still be running. You can check this with
+
+----
+virsh --connect qemu:///system list
+----
+
+And the output should containe a virtual machine called `qcow`.
+
+On the host system (make sure the prompt shows `[lab-user@hypervisor edge-os]$`)  You can now edit the `Containerfile` with the
+following contents:
+
+----
+FROM registry.redhat.io/rhel9/rhel-bootc:9.4
+
+RUN dnf install -y httpd
+RUN echo Hello RedHat PRODUCTION > /var/www/html/index.html
+
+RUN systemctl enable httpd
+----
+
+Please notice we have updated the line "Hello RedHat" and added the text "PRODUCTION" to it.
+
+You can now rebuild the container:
+
+----
+podman build --file Containerfile --tag summit.registry/bifrost:bootc
+----
+
+And push it to the registry:
+
+----
+podman push summit.registry/bifrost:bootc
+----
+
+[#update-vm]
+== Updating the virtual machine
+
+Now you can ssh into the virtual machine
+
+----
+ssh cloud-user@qcow-vm
+----
+
+And check the bootc status (the `sudo` password is `bifrost`):
+
+----
+sudo bootc status
+----
+
+And trigger the update:
+
+----
+sudo bootc update
+sudo systemctl reboot
+----

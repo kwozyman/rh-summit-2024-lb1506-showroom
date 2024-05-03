@@ -30,3 +30,8 @@
 ** xref:module-06.adoc#create-vm[Creating the new virtual machine]
 ** xref:module-06.adoc#bootc-deploy[Selfdeploying the bootc container]
 
+* xref:module-07.adoc[7. Updating bootc hosts]
+** xref:module-07.adoc#update-container[Updating and building the bootc container image]
+** xref:module-07.adoc#update-vm[Updating the bootc virtual machine]
+
+
