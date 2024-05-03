@@ -1,7 +1,7 @@
 ---
 site:
-  title: Showroom Template Demo
-  url: https://redhat-scholars.github.io/course-template
+  title: OS Containers
+  # url: https://redhat-scholars.github.io/course-template
   start_page: modules::index.adoc
 
 content:
@@ -18,3 +18,9 @@ runtime:
 
 output:
   dir: ./www
+
+antora:
+  extensions:
+    - id: dev-mode
+      require: ./content/lib/dev-mode.js
+      enabled: true
