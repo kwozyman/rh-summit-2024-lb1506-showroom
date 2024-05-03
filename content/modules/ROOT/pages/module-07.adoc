@@ -1,17 +1,9 @@
 = Updating bootc systems
 
-In this lab, you will learn how to update bootc hosts.
+In this lab, you will learn how to update bootc hosts and rollback if needed.
 
 [#update-container]
 == Updating the container image
-
-The first virtual machine you have created during this workshop should still be running. You can check this with
-
-----
-virsh --connect qemu:///system list
-----
-
-And the output should containe a virtual machine called `qcow`.
 
 On the host system (make sure the prompt shows `[lab-user@hypervisor edge-os]$`)  You can now edit the `Containerfile` with the
 following contents:
@@ -20,43 +12,287 @@ following contents:
 FROM registry.redhat.io/rhel9/rhel-bootc:9.4
 
 RUN dnf install -y httpd
-RUN echo Hello RedHat PRODUCTION > /var/www/html/index.html
-
+RUN echo Hello RedHat Summit 2024 > /var/www/html/index.html
 RUN systemctl enable httpd
+
+ADD certs/004-summit.conf /etc/containers/registries.conf.d/004-summit.conf
+
+ARG SSHPUBKEY
+ADD templates/30-auth-system.conf /etc/ssh/sshd_config.d/30-auth-system.conf
+RUN mkdir -p /usr/ssh
+RUN echo ${SSHPUBKEY} > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys
 ----
 
-Please notice we have updated the line "Hello RedHat" and added the text "PRODUCTION" to it.
+Please note this is the last used Containerfile and we have added "Summit 2024" to the index.html file.
 
-You can now rebuild the container:
-
-----
-podman build --file Containerfile --tag summit.registry/bifrost:bootc
-----
-
-And push it to the registry:
+You can now rebuild the container (make sure you have included the `--build-arg`):
 
 ----
-podman push summit.registry/bifrost:bootc
+podman build --build-arg SSHPUBKEY="$(cat ~/.ssh/id_rsa.pub)" --file Containerfile --tag summit.registry/bifrost:bootc-auth
+----
+
+And make sure to push it to the registry:
+
+----
+podman push summit.registry/bifrost:bootc-auth
 ----
 
 [#update-vm]
 == Updating the virtual machine
 
+The last virtual machine you have created during this workshop should still be running. You can check this with
+
+----
+virsh --connect qemu:///system list
+----
+
+And the output should containe a virtual machine called `regular`.
+
+
 Now you can ssh into the virtual machine
 
 ----
-ssh cloud-user@qcow-vm
+ssh root@regular-vm
 ----
 
-And check the bootc status (the `sudo` password is `bifrost`):
+And check the bootc status:
 
 ----
-sudo bootc status
+bootc status
 ----
 
-And trigger the update:
+The output should look like this:
+
+[source,yaml]
+----
+apiVersion: org.containers.bootc/v1alpha1
+kind: BootcHost
+metadata:
+  name: host
+spec:
+  image:
+    image: summit.registry/bifrost:bootc-auth
+    transport: registry
+  bootOrder: default
+status:
+  staged: null
+  booted:
+    image:
+      image:
+        image: summit.registry/bifrost:bootc-auth
+        transport: registry
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:b57df8b24f7ddaf39ade0efe02d203e4fcd63deca2a9fd47f4af5c2cc3fcd017
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 22b18bfa0e94fbe390379cb4bae150ebad85c8844e7b721179d26c1df636ce8e
+      deploySerial: 0
+  rollback: null
+  rollbackQueued: false
+  type: bootcHost
+----
+
+Notice the `image: summit.registry/bifrost:bootc-auth`, which is the image you have just updated. That means you can directly trigged the update:
+
+[source,bash]
+----
+bootc update
+----
+
+The output should look something like this:
 
 ----
-sudo bootc update
+Loading usr/lib/ostree/prepare-root.conf
+Queued for next boot: summit.registry/bifrost:bootc-auth
+  Version: 9.20240501.0
+  Digest: sha256:c5a5bc63cc5d081c528c82a177d0c5eac996a16fa3a651f93d07825302ff5336
+Total new layers: 73    Size: 947.9 MB
+Removed layers:   6     Size: 2.3 kB
+Added layers:     6     Size: 2.2 kB
+----
+
+Now you can, like in Section 5, see the staged changes:
+
+[source,bash]
+----
+bootc status
+----
+
+The output should look like:
+
+[source,yaml]
+----
+apiVersion: org.containers.bootc/v1alpha1
+kind: BootcHost
+metadata:
+  name: host
+spec:
+  image:
+    image: summit.registry/bifrost:bootc-auth
+    transport: registry
+  bootOrder: default
+status:
+  staged:
+    image:
+      image:
+        image: summit.registry/bifrost:bootc-auth
+        transport: registry
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:c5a5bc63cc5d081c528c82a177d0c5eac996a16fa3a651f93d07825302ff5336
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 20cbee67379b96ad9eb273c0f7a7cd3673644e2d8af13f8b7437afd12dc95070
+      deploySerial: 0
+  booted:
+    image:
+      image:
+        image: summit.registry/bifrost:bootc-auth
+        transport: registry
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:b57df8b24f7ddaf39ade0efe02d203e4fcd63deca2a9fd47f4af5c2cc3fcd017
+    cachedUpdate:
+      image:
+        image: summit.registry/bifrost:bootc-auth
+        transport: registry
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:c5a5bc63cc5d081c528c82a177d0c5eac996a16fa3a651f93d07825302ff5336
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 22b18bfa0e94fbe390379cb4bae150ebad85c8844e7b721179d26c1df636ce8e
+      deploySerial: 0
+  rollback: null
+  rollbackQueued: false
+  type: bootcHost
+----
+
+Please note the `booted` and `staged` sections. Even though they point to the same image `summit.registry/bifrost:bootc-auth`,
+the `imageDigest` hash is different.
+
+The last step for the change to take is to reboot the virtual machine. Before doing it, please make sure you are logged in to the
+virtual machine and not the hypervisor (the prompt should look like `[root@regular-vm ~]#`):
+
+[source,bash]
+----
 sudo systemctl reboot
 ----
+
+[#testing]
+== Testing the changes
+
+Shortly after reboot, you should be able to see the update on the http application:
+
+[source,bash]
+----
+curl http://regular-vm
+----
+
+And the output should be "Hello RedHat Summit 2024"!
+
+You can now login back to the virtual machine:
+
+[source,bash]
+----
+ssh root@regular-vm
+----
+
+And check once again the status of bootc:
+
+[source,bash]
+----
+bootc status
+----
+
+The output should look like this:
+
+[source,yaml]
+----
+apiVersion: org.containers.bootc/v1alpha1
+kind: BootcHost
+metadata:
+  name: host
+spec:
+  image:
+    image: summit.registry/bifrost:bootc-auth
+    transport: registry
+  bootOrder: default
+status:
+  staged: null
+  booted:
+    image:
+      image:
+        image: summit.registry/bifrost:bootc-auth
+        transport: registry
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:b57df8b24f7ddaf39ade0efe02d203e4fcd63deca2a9fd47f4af5c2cc3fcd017
+    cachedUpdate: null
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: 09221f57a440c585ebd5e77e7b2fe6d4a8d9fab083c2e62dad4e322c16ec6bed
+      deploySerial: 0
+  rollback:
+    image:
+      image:
+        image: summit.registry/bifrost:bootc-auth
+        transport: registry
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:d2f01ccf89c4ef6c4cc7d61982e4a83d3fc222c9028ab3eacc4ea0667df436e9
+    cachedUpdate:
+      image:
+        image: summit.registry/bifrost:bootc-auth
+        transport: registry
+      version: 9.20240501.0
+      timestamp: null
+      imageDigest: sha256:b57df8b24f7ddaf39ade0efe02d203e4fcd63deca2a9fd47f4af5c2cc3fcd017
+    incompatible: false
+    pinned: false
+    ostree:
+      checksum: dbc49413600f67d5ba26dbf6f3bf441ea1824b5091a6e2038901263b3262651f
+      deploySerial: 0
+  rollbackQueued: false
+  type: bootcHost
+----
+
+Please notice the sections `booted` and `rollback`.
+
+Rollback are as simple as running one command. Let's try this now:
+
+[source,bash]
+----
+bootc rollback
+----
+
+The command should return very fast and the output looks like this:
+
+----
+bootfs is sufficient for calculated new size: 0 bytes
+Next boot: rollback deployment
+----
+
+As usual, a reboot is needed. Before doing it, please make sure you are logged in to the
+virtual machine and not the hypervisor (the prompt should look like `[root@regular-vm ~]#`):
+
+[source,bash]
+----
+sudo systemctl reboot
+----
+
+After the host is back up, you can notice the installation has reverted to the original "Hello RedHat" version:
+
+[source,bash]
+----
+curl http://regular-vm
+----
+
+Congratulations, you have updated and rolled back the update on a container based operating system!

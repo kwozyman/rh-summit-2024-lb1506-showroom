@@ -34,4 +34,5 @@
 * xref:module-07.adoc[7. Updating bootc hosts]
 ** xref:module-07.adoc#update-container[Updating and building the bootc container image]
 ** xref:module-07.adoc#update-vm[Updating the bootc virtual machine]
+** xref:module-07.adoc#testing[Testing the changes]
 
