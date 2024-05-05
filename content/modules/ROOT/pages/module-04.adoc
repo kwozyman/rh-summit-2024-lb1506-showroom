@@ -34,7 +34,7 @@ You can now create a file called `config-qcow2.json` with the following contents
       "user": [
         {
           "name": "lab-user",
-          "password": "bifrost",
+          "password": "lb1506",
           "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAuXnpoluye+KM+9tvIAdHf+F0IHh+K73tlcjEG8LJRB lab-user@hypervisor",
           "groups": [
             "wheel"
@@ -46,7 +46,7 @@ You can now create a file called `config-qcow2.json` with the following contents
 }
 ----
 
-The above file creates a user `lab-user` with the password `bifrost` and the ssh key in the generated virtual machine image.
+The above file creates a user `lab-user` with the password `lb1506` and the ssh key in the generated virtual machine image.
 
 NOTE: For your convenience, a config file has already been generated with the ssh key for your lab host in `config/config-qcow2.json` so
 you can just use that with `cp config/config-qcow2.json config-qcow2.json`.
@@ -54,13 +54,13 @@ you can just use that with `cp config/config-qcow2.json config-qcow2.json`.
 [#create]
 == Create the virtual machine image
 
-In this section, we will assume you are using the bootc image generated in the previous part of the lab tagged `summit.registry/bifrost:bootc`.
+In this section, we will assume you are using the bootc image generated in the previous part of the lab tagged `summit.registry/lb1506:bootc`.
 
 First, you want to make sure the bootc image is pushed to the local registry:
 
 [source,bash]
 ----
-podman push summit.registry/bifrost:bootc
+podman push summit.registry/lb1506:bootc
 ----
 
 In order to build the qcow image, you will use a containerized tool called `bootc-image-builder`. For image builder to work,
@@ -74,7 +74,7 @@ sudo podman run --rm --privileged \
         registry.redhat.io/rhel9/bootc-image-builder:latest \
         --type qcow2 --config /config.json \
         --tls-verify=false \
-        summit.registry/bifrost:bootc
+        summit.registry/lb1506:bootc
 ----
 
 A brief explanation of the arguments used:
@@ -86,7 +86,7 @@ A brief explanation of the arguments used:
   * `--type qcow2` -> the type of image to build
   * `--config /config.json` -> the json configuration file used; please note this is relative to the container filesystem
   * `--tls-verify=false` -> the registry we are running is local and it has self signed certificates; this flag would not be needed with `quay.io` for example
-  * `summit.registry/bifrost:bootc` -> the image we are trying to pack into qcow2
+  * `summit.registry/lb1506:bootc` -> the image we are trying to pack into qcow2
 
 If the previous command was successful, you should be able to see the image is the `qcow2/` directory:
 
@@ -102,7 +102,7 @@ The output should be similar to:
 -rw-r--r--. 1 root root 945M May  2 06:10 qcow2/disk.qcow2
 ----
 
-NOTE: for your convenience, this part of the exercise is automated by using the `make qcow CONTAINER=summit.registry/bifrost:bootc` command
+NOTE: for your convenience, this part of the exercise is automated by using the `make qcow CONTAINER=summit.registry/lb1506:bootc` command
 
 NOTE: if you are using CentOS Stream 9, the `registry.redhat.io/rhel9/bootc-image-builder:latest` can be replaced with `quay.io/centos-bootc/bootc-image-builder:latest`
 
@@ -150,7 +150,7 @@ Now that the virtual machine is up and running, you can see if the application b
 curl http://qcow-vm
 ----
 
-And the results should be the "Hello RedHat" string defined in the Containerfile.
+And the results should be the "Hello Red Hat" string defined in the Containerfile.
 
 You can also login to the virtual machine:
 
@@ -158,9 +158,9 @@ You can also login to the virtual machine:
 ssh lab-user@qcow-vm
 ----
 
-If the ssh key is not automatically picked up, use the password defined in the JSON file at the beginning of this lab (by default `bifrost`).
+If the ssh key is not automatically picked up, use the password defined in the JSON file at the beginning of this lab (by default `lb1506`).
 
-Once you have logged in, you can inspect the bootc status (the password for `sudo` is `bifrost`):
+Once you have logged in, you can inspect the bootc status (the password for `sudo` is `lb1506`):
 
 ----
 sudo bootc status
@@ -176,7 +176,7 @@ metadata:
   name: host
 spec:
   image:
-    image: summit.registry/bifrost:bootc
+    image: summit.registry/lb1506:bootc
     transport: registry
   bootOrder: default
 status:
@@ -184,7 +184,7 @@ status:
   booted:
     image:
       image:
-        image: summit.registry/bifrost:bootc
+        image: summit.registry/lb1506:bootc
         transport: registry
       version: 9.20240501.0
       timestamp: null
@@ -200,7 +200,7 @@ status:
   type: bootcHost
 ----
 
-Congratulations, you are running a bootc virtual machine! From the output of `bootc status` you can clearly see the virtual machine is running the `summit.registry/bifrost:bootc` container image.
+Congratulations, you are running a bootc virtual machine! From the output of `bootc status` you can clearly see the virtual machine is running the `summit.registry/lb1506:bootc` container image.
 
 You can explore the virtual machine before moving on to the next section:
 

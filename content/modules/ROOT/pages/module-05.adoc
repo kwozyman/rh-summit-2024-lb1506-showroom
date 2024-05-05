@@ -26,14 +26,14 @@ If it is missing, you can redownload it by calling `make iso-download`.
 Next, make sure you have pushed the bootc container image to the local registry:
 
 ----
-podman push summit.registry/bifrost:bootc
+podman push summit.registry/lb1506:bootc
 ----
 
 The actual generation of the custom `iso` image is out of scope for this workshop, so we are providing a convenient script to do so:
 
 [source,bash]
 ----
-make iso CONTAINER=summit.registry/bifrost:bootc
+make iso CONTAINER=summit.registry/lb1506:bootc
 ----
 
 At the end of the run, you should be able to list the file `/var/lib/libvirt/images/summit/rhel-boot-custom.iso` as root:
@@ -49,7 +49,7 @@ be resumed with the following steps (*no need to run these commands*):
 
 +
 ----
-skopeo copy "docker://summit.registry/bifrost:bootc" "oci:${TEMPDIR}/container/"
+skopeo copy "docker://summit.registry/lb1506:bootc" "oci:${TEMPDIR}/container/"
 ----
 
   2. generate a Kickstart file (more details below)
@@ -74,8 +74,8 @@ ostreecontainer --url=/run/install/repo/container --transport=oci
 firewall --disabled
 services --enabled=sshd
 sshkey --username lab-user "SSHKEY"
-user --name="lab-user" --groups=wheel --plaintext --password=bifrost
-rootpw bifrost
+user --name="lab-user" --groups=wheel --plaintext --password=lb1506
+rootpw lb1506
 poweroff
 ----
 
@@ -128,7 +128,7 @@ Like with the previous virtual machine created, you can directly see if the http
 curl http://iso-vm
 ----
 
-The output should be the already known "Hello RedHat"
+The output should be the already known "Hello Red Hat"
 
 You should also be able to login to the virtual machine:
 
@@ -136,7 +136,7 @@ You should also be able to login to the virtual machine:
 ssh lab-user@iso-vm
 ----
 
-If the ssh key is not automatically picked up, use the password `bifrost`.
+If the ssh key is not automatically picked up, use the password `lb1506`.
 
 You can now check the status of `bootc`:
 
@@ -197,20 +197,21 @@ is lost. This can be easily fixed by first pulling the image:
 
 [source,bash]
 ----
-sudo podman pull --tls-verify=false summit.registry/bifrost:bootc
+sudo podman pull --tls-verify=false summit.registry/lb1506:bootc
 ----
 
 And then switching our installation to use the new container image:
 
+[source,bash]
 ----
-sudo bootc --transport containers-storage summit.registry/bifrost:bootc
+sudo bootc switch --transport containers-storage summit.registry/lb1506:bootc
 ----
 
 The output should look like this:
 
 ----
 Loading usr/lib/ostree/prepare-root.conf
-Queued for next boot: ostree-unverified-image:containers-storage:summit.registry/bifrost:bootc
+Queued for next boot: ostree-unverified-image:containers-storage:summit.registry/lb1506:bootc
   Version: 9.20240501.0
   Digest: sha256:0a3daed6e31c2f2917e17ea994059e1aaee0481fe16836c118c5e1d10a87365c
 ----
@@ -233,14 +234,14 @@ metadata:
   name: host
 spec:
   image:
-    image: summit.registry/bifrost:bootc
+    image: summit.registry/lb1506:bootc
     transport: containers-storage
   bootOrder: default
 status:
   staged:
     image:
       image:
-        image: summit.registry/bifrost:bootc
+        image: summit.registry/lb1506:bootc
         transport: containers-storage
       version: 9.20240501.0
       timestamp: null
@@ -274,7 +275,7 @@ Please take note of the `staged` section, which shows what is prepared for the n
 booted status. For this exercise, these two differ only in name and source but it does show a regular workflow in using os containers.
 
 The last step for the change to take is to reboot the virtual machine. Before doing it, please make sure you are logged in to the
-virtual machine and not the hypervisor (the prompt should look like `[lab-user@bifrost-vm ~]$`):
+virtual machine and not the hypervisor (the prompt should look like `[lab-user@lb1506-vm ~]$`):
 
 [source,bash]
 ----
@@ -303,7 +304,7 @@ metadata:
   name: host
 spec:
   image:
-    image: summit.registry/bifrost:bootc
+    image: summit.registry/lb1506:bootc
     transport: containers-storage
   bootOrder: default
 status:
@@ -311,7 +312,7 @@ status:
   booted:
     image:
       image:
-        image: summit.registry/bifrost:bootc
+        image: summit.registry/lb1506:bootc
         transport: containers-storage
       version: 9.20240501.0
       timestamp: null

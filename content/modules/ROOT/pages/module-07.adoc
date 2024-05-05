@@ -12,7 +12,7 @@ following contents:
 FROM registry.redhat.io/rhel9/rhel-bootc:9.4
 
 RUN dnf install -y httpd
-RUN echo Hello RedHat Summit 2024 > /var/www/html/index.html
+RUN echo "Hello Red Hat Summit 2024" > /var/www/html/index.html
 RUN systemctl enable httpd
 
 ADD certs/004-summit.conf /etc/containers/registries.conf.d/004-summit.conf
@@ -28,13 +28,13 @@ Please note this is the last used Containerfile and we have added "Summit 2024" 
 You can now rebuild the container (make sure you have included the `--build-arg`):
 
 ----
-podman build --build-arg SSHPUBKEY="$(cat ~/.ssh/id_rsa.pub)" --file Containerfile --tag summit.registry/bifrost:bootc-auth
+podman build --build-arg SSHPUBKEY="$(cat ~/.ssh/id_rsa.pub)" --file Containerfile --tag summit.registry/lb1506:bootc-auth
 ----
 
 And make sure to push it to the registry:
 
 ----
-podman push summit.registry/bifrost:bootc-auth
+podman push summit.registry/lb1506:bootc-auth
 ----
 
 [#update-vm]
@@ -71,7 +71,7 @@ metadata:
   name: host
 spec:
   image:
-    image: summit.registry/bifrost:bootc-auth
+    image: summit.registry/lb1506:bootc-auth
     transport: registry
   bootOrder: default
 status:
@@ -79,7 +79,7 @@ status:
   booted:
     image:
       image:
-        image: summit.registry/bifrost:bootc-auth
+        image: summit.registry/lb1506:bootc-auth
         transport: registry
       version: 9.20240501.0
       timestamp: null
@@ -95,7 +95,7 @@ status:
   type: bootcHost
 ----
 
-Notice the `image: summit.registry/bifrost:bootc-auth`, which is the image you have just updated. That means you can directly trigged the update:
+Notice the `image: summit.registry/lb1506:bootc-auth`, which is the image you have just updated. That means you can directly trigged the update:
 
 [source,bash]
 ----
@@ -106,7 +106,7 @@ The output should look something like this:
 
 ----
 Loading usr/lib/ostree/prepare-root.conf
-Queued for next boot: summit.registry/bifrost:bootc-auth
+Queued for next boot: summit.registry/lb1506:bootc-auth
   Version: 9.20240501.0
   Digest: sha256:c5a5bc63cc5d081c528c82a177d0c5eac996a16fa3a651f93d07825302ff5336
 Total new layers: 73    Size: 947.9 MB
@@ -131,14 +131,14 @@ metadata:
   name: host
 spec:
   image:
-    image: summit.registry/bifrost:bootc-auth
+    image: summit.registry/lb1506:bootc-auth
     transport: registry
   bootOrder: default
 status:
   staged:
     image:
       image:
-        image: summit.registry/bifrost:bootc-auth
+        image: summit.registry/lb1506:bootc-auth
         transport: registry
       version: 9.20240501.0
       timestamp: null
@@ -152,14 +152,14 @@ status:
   booted:
     image:
       image:
-        image: summit.registry/bifrost:bootc-auth
+        image: summit.registry/lb1506:bootc-auth
         transport: registry
       version: 9.20240501.0
       timestamp: null
       imageDigest: sha256:b57df8b24f7ddaf39ade0efe02d203e4fcd63deca2a9fd47f4af5c2cc3fcd017
     cachedUpdate:
       image:
-        image: summit.registry/bifrost:bootc-auth
+        image: summit.registry/lb1506:bootc-auth
         transport: registry
       version: 9.20240501.0
       timestamp: null
@@ -174,7 +174,7 @@ status:
   type: bootcHost
 ----
 
-Please note the `booted` and `staged` sections. Even though they point to the same image `summit.registry/bifrost:bootc-auth`,
+Please note the `booted` and `staged` sections. Even though they point to the same image `summit.registry/lb1506:bootc-auth`,
 the `imageDigest` hash is different.
 
 The last step for the change to take is to reboot the virtual machine. Before doing it, please make sure you are logged in to the
@@ -195,7 +195,7 @@ Shortly after reboot, you should be able to see the update on the http applicati
 curl http://regular-vm
 ----
 
-And the output should be "Hello RedHat Summit 2024"!
+And the output should be "Hello Red Hat Summit 2024"!
 
 You can now login back to the virtual machine:
 
@@ -221,7 +221,7 @@ metadata:
   name: host
 spec:
   image:
-    image: summit.registry/bifrost:bootc-auth
+    image: summit.registry/lb1506:bootc-auth
     transport: registry
   bootOrder: default
 status:
@@ -229,7 +229,7 @@ status:
   booted:
     image:
       image:
-        image: summit.registry/bifrost:bootc-auth
+        image: summit.registry/lb1506:bootc-auth
         transport: registry
       version: 9.20240501.0
       timestamp: null
@@ -243,14 +243,14 @@ status:
   rollback:
     image:
       image:
-        image: summit.registry/bifrost:bootc-auth
+        image: summit.registry/lb1506:bootc-auth
         transport: registry
       version: 9.20240501.0
       timestamp: null
       imageDigest: sha256:d2f01ccf89c4ef6c4cc7d61982e4a83d3fc222c9028ab3eacc4ea0667df436e9
     cachedUpdate:
       image:
-        image: summit.registry/bifrost:bootc-auth
+        image: summit.registry/lb1506:bootc-auth
         transport: registry
       version: 9.20240501.0
       timestamp: null
@@ -288,7 +288,7 @@ virtual machine and not the hypervisor (the prompt should look like `[root@regul
 sudo systemctl reboot
 ----
 
-After the host is back up, you can notice the installation has reverted to the original "Hello RedHat" version:
+After the host is back up, you can notice the installation has reverted to the original "Hello Red Hat" version:
 
 [source,bash]
 ----
