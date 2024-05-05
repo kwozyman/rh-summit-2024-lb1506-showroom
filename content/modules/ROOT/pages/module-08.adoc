@@ -1,1 +1,95 @@
 = Repurposing a bootc host
+
+In this final lab, you will learn how to easily repurpose a bootc host and you
+will attempt to build a more complex container image, which includes Red Hat's and IBM's
+instructlab AI inference engine and build it with two different data models.
+
+[#write-containerfiles]
+== Write advanced containerfiles
+
+On the host system (make sure the prompt shows `[lab-user@hypervisor edge-os]$`), you can
+now edit the `Containerfile` with the following contents:
+
+[source,dockerfile]
+----
+FROM summit.registry/lb1506:bootc-auth
+
+RUN dnf install -y python3.11 git python3.11-pip make automake gcc gcc-c++
+RUN python3.11 -m pip install git+https://github.com/instructlab/instructlab.git@stable
+
+RUN mkdir -p /etc/ilab
+WORKDIR /etc/ilab
+RUN ilab init --non-interactive
+RUN ilab --config /etc/ilab/config.yaml download
+----
+
+Please note for this container you are using the last container image you build
+in the previous lab. This means all the previous customizations are kept and
+you are just adding on top of it.
+
+The extra commands added are installing Red Hat and IBM's AI inference engine
+and also downloading a simple LLM model.
+
+You can now build the image:
+
+[source,bash]
+----
+podman build --file Containerfile --tag summit.registry/lb1506:bootc-ai
+----
+
+And of course push it to the local registry:
+
+[source,bash]
+----
+podman push summit.registry/lb1506:bootc-ai
+----
+
+[#build]
+== Build and push the image
+
+You can now login to the last used virtual machine:
+
+[source,bash]
+----
+ssh root@regular-vm
+----
+
+[switch-run]
+== Switch and test the image
+
+After the new container image has been pushed to the local registry,
+you can `switch` the bootc image to the ai one:
+
+[source,bash]
+----
+bootc switch summit.registry/lb1506:bootc-ai
+----
+
+As usual, after the command is done you need to reboot the virtual machine
+for the changes to take effect. Before doing that, please make sure you are logged in to the
+virtual machine and not the hypervisor (the prompt should look like `[root@regular-vm ~]#`):
+
+[source,bash]
+----
+systemctl reboot
+----
+
+After a short while, you can log back in to the virtual machine and check the bootc status:
+
+[source,bash]
+----
+ssh root@regular-vm
+bootc status
+----
+
+Your virtual machine is now ready to answer simple questions!
+
+[source,bash]
+----
+ilab --config /etc/ilab/config.yml chat
+----
+
+Please note the AI model is completely embedded in the container image and has been transferred
+at system upgrade.
+
+Congratulations for completing LB 1506 and thank you for attending!

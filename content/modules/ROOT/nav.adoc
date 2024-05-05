@@ -36,3 +36,7 @@
 ** xref:module-07.adoc#update-vm[Updating the bootc virtual machine]
 ** xref:module-07.adoc#testing[Testing the changes]
 
+* xref:module-08.adoc[8. Repurposing a bootc host]
+** xref:module-08.adoc#write-containerfiles[Write containerfile]
+** xref:module-08.adoc#build[Build and push container image]
+** xref:module-08.adoc#switch-run[Switch the image and run]

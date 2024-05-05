@@ -5,9 +5,9 @@ In this lab, you will learn how to update bootc hosts and rollback if needed.
 [#update-container]
 == Updating the container image
 
-On the host system (make sure the prompt shows `[lab-user@hypervisor edge-os]$`)  You can now edit the `Containerfile` with the
-following contents:
+On the host system (make sure the prompt shows `[lab-user@hypervisor edge-os]$`), you can now edit the `Containerfile` with the following contents:
 
+[source,dockerfile]
 ----
 FROM registry.redhat.io/rhel9/rhel-bootc:9.4
 
