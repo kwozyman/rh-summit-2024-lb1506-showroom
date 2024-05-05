@@ -24,7 +24,11 @@ cd rh-summit-2024-lb1506
 == Red Hat registry login
 
 In order to use the base Red Hat container images, you need to login to Red Hat's image container registry
-by using your Red Hat account credentials.
+by using your Red Hat account credentials. If you do not have a service account, visit
+https://access.redhat.com/terms-based-registry and click “New service account”. From there click the name
+of the new entry and copy/paste the “docker login” instructions in the terminal, replacing the docker
+command with podman. Full instructions are https://access.redhat.com/RegistryAuthentication[here] if more
+information is needed.
 
 [source,bash]
 ----
@@ -37,7 +41,7 @@ a password.
 NOTE: If you cannot login to the Red Hat registry but you still want to continue this lab, you can use the
 command `git checkout centos` to switch to using the publicly available CentOS Stream9 container images. You will also
 have to replace any occurences of `registry.redhat.io/rhel9/rhel-bootc:9.4` with `quay.io/centos-bootc/centos-bootc`
-wherever they appear in this document
+wherever they appear in this document.
 
 [#high-level]
 == Preparing the host for container building

@@ -13,7 +13,7 @@ In the last lab, you have created a Containerfile with the following contents:
 FROM registry.access.redhat.com/ubi9/ubi
 
 RUN dnf install -y httpd
-RUN echo Hello RedHat > /var/www/html/index.html
+RUN echo "Hello Red Hat" > /var/www/html/index.html
 
 ENTRYPOINT /usr/sbin/httpd -DFOREGROUND
 ----
@@ -25,9 +25,9 @@ You can now use your preferred text editor (`nano Containerfile`) to modify the 
 FROM registry.redhat.io/rhel9/rhel-bootc:9.4
 
 RUN dnf install -y httpd
-RUN echo Hello RedHat > /var/www/html/index.html
-
+RUN echo "Hello Red Hat" > /var/www/html/index.html
 RUN systemctl enable httpd.service
+
 ENTRYPOINT /usr/sbin/httpd -DFOREGROUND
 ----
 
@@ -48,13 +48,13 @@ Like with the previous simple application, you can build this container:
 
 [source,dockerfile]
 ----
-podman build --file Containerfile --tag summit.registry/bifrost:latest
+podman build --file Containerfile --tag summit.registry/lb1506:latest
 ----
 
 If the above command is succesful, the last two lines of the output should read like this:
 
 ----
-Successfully tagged summit.registry/bifrost:latest
+Successfully tagged summit.registry/lb1506:latest
 f1bea10eb37acf2e78a9b01c6242110c1901adbaf40dbce479241c6c735c58da
 ----
 
@@ -68,7 +68,7 @@ Now that the bootc container is ready, you can test it exactly like the previous
 
 [source,bash]
 ----
-podman run --rm --name http-test --detach --publish 80:80 summit.registry/bifrost:latest
+podman run --rm --name http-test --detach --publish 80:80 summit.registry/lb1506:latest
 ----
 
 Test that it is running:
@@ -81,7 +81,7 @@ podman ps | grep http-test
 The output of the command above should read like this:
 
 ----
-06a7bdb1950b  summit.registry/bifrost:latest    15 seconds ago  Up 16 seconds  0.0.0.0:80->80/tcp    http-test
+06a7bdb1950b  summit.registry/lb1506:latest    15 seconds ago  Up 16 seconds  0.0.0.0:80->80/tcp    http-test
 ----
 
 And you can test the application:
@@ -91,22 +91,22 @@ And you can test the application:
 curl http://localhost/
 ----
 
-The result of the command above should be the "Hello RedHat" string from the Containerfile:
+The result of the command above should be the "Hello Red Hat" string from the Containerfile:
 
 ----
-Hello RedHat
+Hello Red Hat
 ----
 
 You should preserve this image by tagging it:
 
 ----
-podman tag summit.registry/bifrost:latest summit.registry/bifrost:bootc
+podman tag summit.registry/lb1506:latest summit.registry/lb1506:bootc
 ----
 
 And pushing it to the local registry:
 
 ----
-podman push summit.registry/bifrost:bootc
+podman push summit.registry/lb1506:bootc
 ----
 
 You should also stop the running container:

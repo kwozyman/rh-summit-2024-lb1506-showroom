@@ -15,7 +15,7 @@ need to edit the `Containerfile` to the following:
 FROM registry.redhat.io/rhel9/rhel-bootc:9.4
 
 RUN dnf install -y httpd
-RUN echo Hello RedHat > /var/www/html/index.html
+RUN echo "Hello Red Hat" > /var/www/html/index.html
 RUN systemctl enable httpd
 
 ADD certs/004-summit.conf /etc/containers/registries.conf.d/004-summit.conf
@@ -24,6 +24,8 @@ ARG SSHPUBKEY
 ADD templates/30-auth-system.conf /etc/ssh/sshd_config.d/30-auth-system.conf
 RUN mkdir -p /usr/ssh
 RUN echo ${SSHPUBKEY} > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys
+
+ENTRYPOINT /usr/sbin/httpd -DFOREGROUND
 ----
 
 Please notice the top part is still the httpd server we started this workshop with, but there are now 
@@ -48,7 +50,7 @@ You can now build the new container image with with the following command:
 
 [source,bash]
 ----
-podman build --build-arg SSHPUBKEY="$(cat  ~/.ssh/id_rsa.pub)" --file Containerfile --tag summit.registry/bifrost:bootc-auth
+podman build --build-arg SSHPUBKEY="$(cat  ~/.ssh/id_rsa.pub)" --file Containerfile --tag summit.registry/lb1506:bootc-auth
 ----
 
 Please take note of the `--build-arg SSHPUBKEY="$(cat  ~/.ssh/id_rsa.pub)"` argument, which replaces `${SSHPUBKEY}` in the Containerfile with 
@@ -58,7 +60,7 @@ If the build command was successful, make sure to push the new container image t
 
 [source,bash]
 ----
-podman push summit.registry/bifrost:bootc-auth
+podman push summit.registry/lb1506:bootc-auth
 ----
 
 [#create-vm]
@@ -111,7 +113,7 @@ Now, inside the virtual machine, you can use `podman` to pull the bootc containe
 
 [source,bash]
 ----
-podman pull summit.registry/bifrost:bootc-auth
+podman pull summit.registry/lb1506:bootc-auth
 ----
 
 And you can now use the container image to self deploy!
@@ -124,14 +126,14 @@ podman run --rm --privileged \
         --volume /var/lib/containers:/var/lib/containers \
         --volume /:/target \
         --entrypoint bootc \
-        summit.registry/bifrost:bootc-auth \
+        summit.registry/lb1506:bootc-auth \
         install to-filesystem --skip-fetch-check --replace=alongside /target
 ----
 
 The output of the previous command should like like this:
 
 ----
-Installing image: docker://summit.registry/bifrost:bootc-auth
+Installing image: docker://summit.registry/lb1506:bootc-auth
 Digest: sha256:783522458bb01c7c9870f03b21cbad7497edbb5e95fc59d7a2c3ada7141929fa
 Initializing ostree layout
 Initializing sysroot
@@ -183,7 +185,7 @@ metadata:
   name: host
 spec:
   image:
-    image: summit.registry/bifrost:bootc-auth
+    image: summit.registry/lb1506:bootc-auth
     transport: registry
   bootOrder: default
 status:
@@ -191,7 +193,7 @@ status:
   booted:
     image:
       image:
-        image: summit.registry/bifrost:bootc-auth
+        image: summit.registry/lb1506:bootc-auth
         transport: registry
       version: 9.20240501.0
       timestamp: null
@@ -208,6 +210,13 @@ status:
 ----
 
 Congratulations, you have successfully deployed and booted a bootc container on a running host!
+
+And the `httpd` service is running. We can verify that we get "Hello Red Hat" when curling the VM:
+
+[source,bash]
+----
+curl http://regular-vm
+----
 
 Before proceeding, make sure you have logged out of the virtual machine:
 
