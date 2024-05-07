@@ -9,6 +9,6 @@ asciidoc:
     release-version: master
     page-pagination: true
     guid: my-guid
-    ssh_user: devops
+    ssh_user: lab-user
     ssh_password: devops
     ssh_command: ssh devops@bastion.{guid}.example.opentlc.com
