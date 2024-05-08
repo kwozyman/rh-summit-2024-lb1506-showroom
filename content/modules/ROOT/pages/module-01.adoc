@@ -23,12 +23,12 @@ cd rh-summit-2024-lb1506
 [#login]
 == Red Hat registry login
 
-In order to use the base Red Hat container images, you need to login to Red Hat's image container registry
-by using your Red Hat account credentials. If you do not have a service account, visit
-https://access.redhat.com/terms-based-registry and click “New service account”. From there click the name
-of the new entry and copy/paste the “docker login” instructions in the terminal, replacing the docker
-command with podman. Full instructions are https://access.redhat.com/RegistryAuthentication[here] if more
-information is needed.
+In order to use the base Red Hat Enterprise Linux container images, you need to
+login to Red Hat's image container registry by using your Red Hat account
+credentials. If you don't have a Red Hat account or are concerned about using
+your credentials on a public network, feel free to create a new personal account
+that povides you with a no-cost
+https://developers.redhat.com/articles/faqs-no-cost-red-hat-enterprise-linux#general[Red Hat Developer Subscription].
 
 [source,bash]
 ----
