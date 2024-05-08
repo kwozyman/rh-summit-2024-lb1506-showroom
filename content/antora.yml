@@ -1,14 +1,14 @@
 name: modules
-title: OS Containers
+title: Image-mode RHEL
 version: master
 nav:
   - modules/ROOT/nav.adoc
 asciidoc:
   attributes:
-    lab_name: "Unleashing Operating System Containers on Red Hat Enterprise Linux"
+    lab_name: "Streamlining operating system customization and deployment on Red Hat Enterprise Linux"
     release-version: master
     page-pagination: true
     guid: my-guid
-    ssh_user: devops
+    ssh_user: lab-user
     ssh_password: devops
     ssh_command: ssh devops@bastion.{guid}.example.opentlc.com

@@ -121,10 +121,15 @@ For reference, the manual command is (*you do not need to run this command*):
 ----
 sudo cp qcow2/disk.qcow2 /var/lib/libvirt/images/summit/qcow-vm.qcow2
 virt-install --connect qemu:///system \
-        --name qcow-vm \
-        --disk /var/lib/libvirt/images/summit/qcow-vm.qcow2 \
-        --network "network=summit-network,mac=de:ad:be:ef:01:03" \
-        --memory 4096 --graphics none --noreboot
+                --name qcow \
+                --disk /var/lib/libvirt/images/summit/qcow-vm.qcow2 \
+                --import \
+                --network "network=summit-network,mac=de:ad:be:ef:01:03" \
+                --memory 4096 \
+                --graphics none \
+                --osinfo rhel9-unknown \
+                --noautoconsole \
+                --noreboot
 virsh --connect qemu:///system start qcow-vm
 ----
 
