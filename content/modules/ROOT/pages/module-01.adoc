@@ -38,11 +38,6 @@ podman login registry.redhat.io
 You will be asked for a username (this is typically the email address associated with your account) and
 a password.
 
-NOTE: If you cannot login to the Red Hat registry but you still want to continue this lab, you can use the
-command `git checkout centos` to switch to using the publicly available CentOS Stream9 container images. You will also
-have to replace any occurences of `registry.redhat.io/rhel9/rhel-bootc:9.4` with `quay.io/centos-bootc/centos-bootc`
-wherever they appear in this document.
-
 [#high-level]
 == Preparing the host for container building
 

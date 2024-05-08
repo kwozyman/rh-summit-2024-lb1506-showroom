@@ -71,9 +71,6 @@ Successfully tagged summit.registry/lb1506:latest
 f1bea10eb37acf2e78a9b01c6242110c1901adbaf40dbce479241c6c735c58da
 ----
 
-NOTE: the above build command will be used throughout this workshop so we've
-added a `make build` command that can be used instead.
-
 [#test]
 == Test the containerized application
 

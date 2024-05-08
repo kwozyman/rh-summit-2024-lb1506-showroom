@@ -35,7 +35,7 @@ You can now create a file called `config-qcow2.json` with the following contents
         {
           "name": "lab-user",
           "password": "lb1506",
-          "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAuXnpoluye+KM+9tvIAdHf+F0IHh+K73tlcjEG8LJRB lab-user@hypervisor",
+          "key": "SSHKEY",
           "groups": [
             "wheel"
           ]
@@ -104,8 +104,6 @@ The output should be similar to:
 
 NOTE: for your convenience, this part of the exercise is automated by using the `make qcow CONTAINER=summit.registry/lb1506:bootc` command
 
-NOTE: if you are using CentOS Stream 9, the `registry.redhat.io/rhel9/bootc-image-builder:latest` can be replaced with `quay.io/centos-bootc/bootc-image-builder:latest`
-
 [#create-vm]
 == Create the virtual machine
 
@@ -117,7 +115,7 @@ in the Makefile:
 make vm-qcow
 ----
 
-For reference, the manual command is (you do not need to run this command):
+For reference, the manual command is (*you do not need to run this command*):
 
 [source,bash]
 ----

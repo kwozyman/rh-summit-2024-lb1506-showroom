@@ -86,6 +86,7 @@ Your virtual machine is now ready to answer simple questions!
 
 [source,bash]
 ----
+cd /etc/ilab/config.yml
 ilab --config /etc/ilab/config.yml chat
 ----
 

@@ -95,7 +95,7 @@ status:
   type: bootcHost
 ----
 
-Notice the `image: summit.registry/lb1506:bootc-auth`, which is the image you have just updated. That means you can directly trigged the update:
+Notice the `image: summit.registry/lb1506:bootc-auth`, which is the image you have just updated. That means you can directly trigger the update:
 
 [source,bash]
 ----

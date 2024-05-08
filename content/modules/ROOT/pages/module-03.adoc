@@ -39,8 +39,6 @@ You can immediately observe two changes:
 You can also take note that installation of software is still done via `dnf` and of course `systemctl` works
 exactly like it would in a regular Linux system.
 
-NOTE: For CentOS Stream 9 users, use `FROM quay.io/centos-bootc/centos-bootc:stream9`
-
 [#build]
 == Build the first bootc image
 
