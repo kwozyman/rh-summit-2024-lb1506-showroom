@@ -1,16 +1,16 @@
-=== Getting Started
+=== Lab 1506 Red Hat Summit 2024
 
-This template is designed to be used as a base for your showroom lab guides.
+=== Streamlining operating system customization and deployment on Red Hat Enterprise Linux
 
-In order to test and develop on your local machine, you can use a specially built container with Podman or Docker as follows.
+This repo contains the lab instructions for Lab 1506.
+
+In order to view the instructions locally, you need to clone this repository and serve it locally:
 
 [source,sh]
 ----
+git clone https://github.com/kwozyman/rh-summit-2024-lb1506-showroom
+cd rh-summit-2024-lb1506-showroom
 podman run --rm --name antora -v $PWD:/antora -p 8080:8080 -i -t ghcr.io/juliaaano/antora-viewer
 ----
 
-If you make changes to the content, all you need is to kill the container and run it again.
-
-Live-reload is not supported.
-
-The content is built using Antora, a static site generator for creating documentation sites from AsciiDoc documents.
+You can now open your browser to http://localhost:8080 and start reading.
