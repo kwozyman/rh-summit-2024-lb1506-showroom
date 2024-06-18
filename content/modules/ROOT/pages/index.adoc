@@ -6,5 +6,13 @@ In this lab you will learn how to evolve your containers into full fledged opera
 
 === Lab Access
 
-The terminal window to your right is *already* logged into the lab environment as the `{ssh_user}` user via `ssh`. 
-All steps of this lab are to be completed as the `{ssh_user}` user.
+You can access the lab via `ssh` from a terminal on your local machine.
+
+[source,sh,subs=attributes+]
+----
+ssh {bastion_ssh_user_name}@{bastion_public_hostname}
+----
+
+Your password is `{bastion_ssh_password}`
+
+All steps of this lab are to be completed as the `{bastion_ssh_user_name}` user.

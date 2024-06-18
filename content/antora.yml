@@ -5,10 +5,11 @@ nav:
   - modules/ROOT/nav.adoc
 asciidoc:
   attributes:
+    experimental: true
     lab_name: "Streamlining operating system customization and deployment on Red Hat Enterprise Linux"
     release-version: master
     page-pagination: true
     guid: my-guid
-    ssh_user: lab-user
-    ssh_password: devops
-    ssh_command: ssh devops@bastion.{guid}.example.opentlc.com
+    bastion_ssh_user_name: lab-user
+    bastion_ssh_password: devops
+    bastion_public_hostname: hypervisor.12345.dynamic.opentlc.com
