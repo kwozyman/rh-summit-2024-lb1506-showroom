@@ -10,7 +10,7 @@ In order to view the instructions locally, you need to clone this repository and
 ----
 git clone https://github.com/kwozyman/rh-summit-2024-lb1506-showroom
 cd rh-summit-2024-lb1506-showroom
-podman run --rm --name antora -v $PWD:/antora -p 8080:8080 -i -t ghcr.io/juliaaano/antora-viewer
+podman run --rm --name antora -v $PWD:/antora:z -p 8080:8080 -i -t ghcr.io/juliaaano/antora-viewer
 ----
 
 You can now open your browser to http://localhost:8080 and start reading.
